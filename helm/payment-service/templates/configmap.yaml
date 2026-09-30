@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-payment-service-config
+  labels:
+    app.kubernetes.io/name: payment-service
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  NOTIFICATION_SERVICE_URL: {{ .Values.config.notificationServiceUrl | quote }}

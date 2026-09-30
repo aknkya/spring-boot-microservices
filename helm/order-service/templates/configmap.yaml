@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-order-service-config
+  labels:
+    app.kubernetes.io/name: order-service
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  PAYMENT_SERVICE_URL: {{ .Values.config.paymentServiceUrl | quote }}

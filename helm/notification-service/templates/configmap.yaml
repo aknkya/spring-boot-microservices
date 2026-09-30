@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-notification-service-config
+  labels:
+    app.kubernetes.io/name: notification-service
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  APP_ENV: {{ .Values.config.appEnvironment | quote }}
