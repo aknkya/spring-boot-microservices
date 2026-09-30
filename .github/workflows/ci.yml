@@ -1,4 +1,4 @@
-name: 🚀 Microservices Enterprise CI/CD Pipeline
+name: "🚀 Microservices Enterprise CI/CD Pipeline"
 
 on:
   push:
@@ -13,20 +13,20 @@ jobs:
   # STAGE 1: Aggregator Maven Compilation & Code Verification
   # ============================================================================
   maven-compile:
-    name: ☕ 1. Compile & Verify Java Code
+    name: "☕ 1. Compile & Verify Java Code"
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout repository
+      - name: "📥 Checkout repository"
         uses: actions/checkout@v4
 
-      - name: ☕ Set up JDK 17 (Temurin)
+      - name: "☕ Set up JDK 17 (Temurin)"
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: maven
 
-      - name: ⚙️ Maven Clean & Compile All Services
+      - name: "⚙️ Maven Clean & Compile All Services"
         run: |
           chmod +x mvnw
           ./mvnw clean compile
@@ -35,28 +35,28 @@ jobs:
   # STAGE 2: Parallel Docker Image Builds & Push to GHCR
   # ============================================================================
   docker-order:
-    name: 🐳 2a. Docker: Order Service
+    name: "🐳 2a. Docker: Order Service"
     needs: [maven-compile]
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     steps:
-      - name: 📥 Checkout repository
+      - name: "📥 Checkout repository"
         uses: actions/checkout@v4
 
-      - name: 🔑 Log in to GHCR
+      - name: "🔑 Log in to GHCR"
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🏷️ Calculate Image Tag
+      - name: "🏷️ Calculate Image Tag"
         id: vars
         run: echo "TAG=v1.0.${{ github.run_number }}" >> $GITHUB_OUTPUT
 
-      - name: 🐳 Build & Push order-service
+      - name: "🐳 Build & Push order-service"
         uses: docker/build-push-action@v5
         with:
           context: ./order-service
@@ -66,28 +66,28 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/order-service:${{ steps.vars.outputs.TAG }}
 
   docker-payment:
-    name: 🐳 2b. Docker: Payment Service
+    name: "🐳 2b. Docker: Payment Service"
     needs: [maven-compile]
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     steps:
-      - name: 📥 Checkout repository
+      - name: "📥 Checkout repository"
         uses: actions/checkout@v4
 
-      - name: 🔑 Log in to GHCR
+      - name: "🔑 Log in to GHCR"
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🏷️ Calculate Image Tag
+      - name: "🏷️ Calculate Image Tag"
         id: vars
         run: echo "TAG=v1.0.${{ github.run_number }}" >> $GITHUB_OUTPUT
 
-      - name: 🐳 Build & Push payment-service
+      - name: "🐳 Build & Push payment-service"
         uses: docker/build-push-action@v5
         with:
           context: ./payment-service
@@ -97,28 +97,28 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/payment-service:${{ steps.vars.outputs.TAG }}
 
   docker-notification:
-    name: 🐳 2c. Docker: Notification Service
+    name: "🐳 2c. Docker: Notification Service"
     needs: [maven-compile]
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     steps:
-      - name: 📥 Checkout repository
+      - name: "📥 Checkout repository"
         uses: actions/checkout@v4
 
-      - name: 🔑 Log in to GHCR
+      - name: "🔑 Log in to GHCR"
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 🏷️ Calculate Image Tag
+      - name: "🏷️ Calculate Image Tag"
         id: vars
         run: echo "TAG=v1.0.${{ github.run_number }}" >> $GITHUB_OUTPUT
 
-      - name: 🐳 Build & Push notification-service
+      - name: "🐳 Build & Push notification-service"
         uses: docker/build-push-action@v5
         with:
           context: ./notification-service
@@ -131,51 +131,51 @@ jobs:
   # STAGE 3: Parallel Helm & Manifest Verifications
   # ============================================================================
   helm-order:
-    name: ⎈ 3a. Helm: Order Service
+    name: "⎈ 3a. Helm: Order Service"
     needs: [docker-order]
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout repository
+      - name: "📥 Checkout repository"
         uses: actions/checkout@v4
 
-      - name: 🛠️ Set up Helm
+      - name: "🛠️ Set up Helm"
         uses: azure/setup-helm@v4
 
-      - name: 🔍 Lint & Template Dry-Run
+      - name: "🔍 Lint & Template Dry-Run"
         run: |
           helm lint helm/order-service
           helm template dry-run-order helm/order-service > /dev/null
           echo "✅ Order Service Helm Chart is valid!"
 
   helm-payment:
-    name: ⎈ 3b. Helm: Payment Service
+    name: "⎈ 3b. Helm: Payment Service"
     needs: [docker-payment]
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout repository
+      - name: "📥 Checkout repository"
         uses: actions/checkout@v4
 
-      - name: 🛠️ Set up Helm
+      - name: "🛠️ Set up Helm"
         uses: azure/setup-helm@v4
 
-      - name: 🔍 Lint & Template Dry-Run
+      - name: "🔍 Lint & Template Dry-Run"
         run: |
           helm lint helm/payment-service
           helm template dry-run-payment helm/payment-service > /dev/null
           echo "✅ Payment Service Helm Chart is valid!"
 
   helm-notification:
-    name: ⎈ 3c. Helm: Notification Service
+    name: "⎈ 3c. Helm: Notification Service"
     needs: [docker-notification]
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout repository
+      - name: "📥 Checkout repository"
         uses: actions/checkout@v4
 
-      - name: 🛠️ Set up Helm
+      - name: "🛠️ Set up Helm"
         uses: azure/setup-helm@v4
 
-      - name: 🔍 Lint & Template Dry-Run
+      - name: "🔍 Lint & Template Dry-Run"
         run: |
           helm lint helm/notification-service
           helm template dry-run-notification helm/notification-service > /dev/null
@@ -185,11 +185,11 @@ jobs:
   # STAGE 4: Deployment Readiness Gate (ArgoCD / OpenShift Trigger)
   # ============================================================================
   release-gate:
-    name: 🚀 4. Deployment Readiness Gate
+    name: "🚀 4. Deployment Readiness Gate"
     needs: [helm-order, helm-payment, helm-notification]
     runs-on: ubuntu-latest
     steps:
-      - name: 📋 Release Summary
+      - name: "📋 Release Summary"
         run: |
           echo "=========================================================="
           echo " 🎉 ALL MICROSERVICES BUILT, PACKAGED & VALIDATED! 🎉"
