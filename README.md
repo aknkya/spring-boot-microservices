@@ -155,7 +155,36 @@ docker compose logs -f
 
 ---
 
-### 3. Kubernetes / Helm ile Dağıtım (Deploy)
+### 3. OpenShift (oc) ile Tek Tıkla Dağıtım (All-in-One Script)
+
+Projeyi doğrudan OpenShift kümesine derleyip, imajları paketleyip, Helm ile dağıtmak ve Route açmak için hazırlanan otomasyon betiğini çalıştırabilirsiniz:
+
+```powershell
+# Windows (PowerShell)
+.\scripts\deploy-to-openshift.ps1 -ProjectName "microservices-demo"
+
+# Opsiyonel: Harici bir Docker Registry kullanıyorsanız:
+# .\scripts\deploy-to-openshift.ps1 -ProjectName "microservices-demo" -Registry "quay.io/kullanici"
+```
+
+```bash
+# Linux / macOS / Git Bash
+chmod +x ./scripts/deploy-to-openshift.sh
+./scripts/deploy-to-openshift.sh microservices-demo
+```
+
+Bu script sırasıyla şu 7 adımı ekranda renkli ve detaylı loglarla gerçekleştirir:
+1. `docker`, `helm`, `oc` ve OpenShift oturumunu (`oc whoami`) doğrular.
+2. `mvnw clean package` ile 3 servisin JAR'larını üretir.
+3. 3 servisin Docker imajını derler (`docker build`).
+4. OpenShift projesini (namespace) oluşturur veya mevcut olana geçer (`oc project`).
+5. Helm ile bağımlılık sırasına göre 3 mikroservisi kurar (`helm upgrade --install`).
+6. Dış dünyadan sipariş alabilmek için `order-service`'i Route ile dışa açar (`oc expose svc/order-service`).
+7. 9 Pod'un (`replica: 3`) sağlık kontrollerini (`oc rollout status`) bekler ve canlı test URL'sini ekrana basar.
+
+---
+
+### 4. Kubernetes / Helm ile Dağıtım (Deploy)
 
 Her servis için ayrı hazırlanmış Helm Chart'ları kullanarak Kubernetes kümenize dağıtın:
 
