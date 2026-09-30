@@ -1,0 +1,97 @@
+name: 🚀 Build & Push Microservices to GHCR
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # GitHub web arayüzünden manuel tetikleme butonu
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-and-push:
+    name: Build JARs & Push Docker Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # GitHub Packages (ghcr.io) için yazma yetkisi
+
+    steps:
+      # ------------------------------------------------------------------------
+      # 1. Kodu GitHub'dan çek
+      # ------------------------------------------------------------------------
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      # ------------------------------------------------------------------------
+      # 2. Java 17 ortamını kur
+      # ------------------------------------------------------------------------
+      - name: ☕ Set up JDK 17 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      # ------------------------------------------------------------------------
+      # 3. Maven ile 3 mikroservisi derle
+      # ------------------------------------------------------------------------
+      - name: ⚙️ Build with Maven
+        run: |
+          chmod +x mvnw
+          ./mvnw clean package -DskipTests
+
+      # ------------------------------------------------------------------------
+      # 4. GitHub Container Registry'ye (ghcr.io) otomatik giriş yap
+      # ------------------------------------------------------------------------
+      - name: 🔑 Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }} # GitHub'ın kendi sağladığı hazır şifre!
+
+      # ------------------------------------------------------------------------
+      # 5. Dinamik Versiyon Numarası Belirle
+      # ------------------------------------------------------------------------
+      - name: 🏷️ Calculate Image Tag
+        id: vars
+        run: |
+          # Örnek: v1.0.1, v1.0.2...
+          echo "TAG=v1.0.${{ github.run_number }}" >> $GITHUB_OUTPUT
+
+      # ------------------------------------------------------------------------
+      # 6. Notification Service İmajını Derle ve Yükle
+      # ------------------------------------------------------------------------
+      - name: 🐳 Build & Push notification-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./notification-service
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/notification-service:latest
+            ghcr.io/${{ github.repository_owner }}/notification-service:${{ steps.vars.outputs.TAG }}
+
+      # ------------------------------------------------------------------------
+      # 7. Payment Service İmajını Derle ve Yükle
+      # ------------------------------------------------------------------------
+      - name: 🐳 Build & Push payment-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./payment-service
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/payment-service:latest
+            ghcr.io/${{ github.repository_owner }}/payment-service:${{ steps.vars.outputs.TAG }}
+
+      # ------------------------------------------------------------------------
+      # 8. Order Service İmajını Derle ve Yükle
+      # ------------------------------------------------------------------------
+      - name: 🐳 Build & Push order-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./order-service
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/order-service:latest
+            ghcr.io/${{ github.repository_owner }}/order-service:${{ steps.vars.outputs.TAG }}
